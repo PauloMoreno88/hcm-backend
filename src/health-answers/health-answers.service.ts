@@ -44,6 +44,7 @@ export class HealthAnswersService {
   }
 
   async findByVehicle(userId: string, vehicleId: string) {
+    console.log('findByVehicle', userId, vehicleId);
     await this.vehiclesService.assertVehicleOwnedByUser(userId, vehicleId);
     return this.prisma.vehicleHealthAnswer.findMany({ where: { vehicleId } });
   }
