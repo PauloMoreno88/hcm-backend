@@ -22,7 +22,10 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
   app.enableCors({
-    origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+    origin: [
+      'http://localhost:5173',
+      'https://hcm-frontend-five.vercel.app',
+    ],
     credentials: true,
   });
   process.on('uncaughtException', (err) => logger.error('Uncaught Exception', err.stack));
