@@ -3,11 +3,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { MaintenanceStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import type { CreateMaintenanceDto } from './dto/create-maintenance.dto';
 import type { UpdateMaintenanceDto } from './dto/update-maintenance.dto';
+
+export function isMaintenanceCompleted(maintenance: { status: MaintenanceStatus }): boolean {
+  return maintenance.status === MaintenanceStatus.DONE;
+}
 
 const maintenanceInclude = {
   files: true,
@@ -34,6 +38,7 @@ export class MaintenancesService {
           km: rest.km,
           price: rest.price ?? null,
           date,
+          status: rest.status ?? MaintenanceStatus.TODO,
           files: files?.length
             ? {
                 create: files.map((f) => ({
@@ -80,6 +85,7 @@ export class MaintenancesService {
       km: maintenance.km,
       price: maintenance.price,
       date: maintenance.date,
+      status: maintenance.status,
       createdAt: maintenance.createdAt,
       files: maintenance.files,
     };
@@ -93,6 +99,16 @@ export class MaintenancesService {
     const existing = await this.findOneForUser(userId, maintenanceId);
     const { files, date, ...rest } = dto;
 
+    const isBeingCompleted =
+      rest.status === MaintenanceStatus.DONE &&
+      existing.status !== MaintenanceStatus.DONE;
+
+    const resolvedDate = isBeingCompleted
+      ? new Date()
+      : date
+        ? new Date(date)
+        : undefined;
+
     const updated = await this.prisma.$transaction(async (tx) => {
       if (files !== undefined) {
         await tx.maintenanceFile.deleteMany({ where: { maintenanceId } });
@@ -102,7 +118,7 @@ export class MaintenancesService {
         where: { id: maintenanceId },
         data: {
           ...rest,
-          ...(date ? { date: new Date(date) } : {}),
+          ...(resolvedDate ? { date: resolvedDate } : {}),
           ...(files !== undefined
             ? {
                 files: {

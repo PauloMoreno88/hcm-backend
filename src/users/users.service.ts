@@ -6,11 +6,13 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { UpdateUserDto } from './dto/update-user.dto';
+import type { UpdateUserPreferencesDto } from './dto/update-user-preferences.dto';
 
 const publicUserSelect = {
   id: true,
   email: true,
   name: true,
+  healthScoreEnabled: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -69,5 +71,13 @@ export class UsersService {
       }
       throw e;
     }
+  }
+
+  async updatePreferences(userId: string, dto: UpdateUserPreferencesDto) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: dto,
+      select: publicUserSelect,
+    });
   }
 }

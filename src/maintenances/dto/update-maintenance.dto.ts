@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDateString,
+  IsEnum,
   IsInt,
   IsNumber,
   IsOptional,
@@ -10,6 +11,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+import { MaintenanceStatus } from '@prisma/client';
 import { MaintenanceFileInputDto } from './create-maintenance.dto';
 
 export class UpdateMaintenanceDto {
@@ -35,6 +37,10 @@ export class UpdateMaintenanceDto {
   @IsOptional()
   @IsDateString()
   date?: string;
+
+  @IsOptional()
+  @IsEnum(MaintenanceStatus)
+  status?: MaintenanceStatus;
 
   @IsOptional()
   @IsArray()

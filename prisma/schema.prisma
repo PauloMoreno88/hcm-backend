@@ -8,12 +8,13 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  email              String   @unique
+  password           String
+  name               String?
+  healthScoreEnabled Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   vehicles Vehicle[]
 }
@@ -38,15 +39,22 @@ model Vehicle {
   @@index([userId])
 }
 
+enum MaintenanceStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
 model Maintenance {
-  id          String   @id @default(uuid())
+  id          String            @id @default(uuid())
   vehicleId   String
   type        String
   description String?
   km          Int
   price       Float?
   date        DateTime
-  createdAt   DateTime @default(now())
+  status      MaintenanceStatus @default(TODO)
+  createdAt   DateTime          @default(now())
 
   vehicle Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   files   MaintenanceFile[]

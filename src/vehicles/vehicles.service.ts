@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { MaintenanceStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CreateVehicleDto } from './dto/create-vehicle.dto';
 import type { UpdateVehicleDto } from './dto/update-vehicle.dto';
@@ -76,11 +76,22 @@ export class VehiclesService {
   async computeHealthScore(userId: string, vehicleId: string) {
     const now = new Date();
 
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { healthScoreEnabled: true },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    if (!user.healthScoreEnabled) {
+      return { vehicleId, healthScore: null, healthScoreEnabled: false };
+    }
+
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { id: vehicleId },
       include: {
         maintenances: {
-          where: { date: { lte: now } },
+          where: { date: { lte: now }, status: MaintenanceStatus.DONE },
         },
       },
     });
@@ -102,6 +113,6 @@ export class VehiclesService {
       data: { healthScore: result.score },
     });
 
-    return result;
+    return { ...result, healthScoreEnabled: true };
   }
 }
